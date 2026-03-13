@@ -1,0 +1,1855 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Contract Lifecycle Cost Calculator | Counselect</title>
+  <meta name="description" content="Calculate the real cost of legal delays in your contract lifecycle. See how much you could save by reducing legal review time.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+  <style>
+    /* ═══════════════════════════════════════════
+       CSS CUSTOM PROPERTIES
+       ═══════════════════════════════════════════ */
+    :root {
+      --navy-950: #0a0f1e;
+      --navy-900: #0f1729;
+      --navy-800: #162040;
+      --navy-700: #1e2d56;
+      --navy-600: #2a3d6e;
+      --navy-500: #3a5291;
+      --navy-400: #5672b0;
+      --navy-300: #8096cc;
+      --navy-200: #b3c1e0;
+      --navy-100: #dce3f0;
+      --navy-50: #f0f3f8;
+
+      --amber-600: #d4880a;
+      --amber-500: #e8a020;
+      --amber-400: #f0b840;
+      --amber-300: #f5cc6a;
+      --amber-200: #fae0a0;
+      --amber-100: #fdf0d0;
+      --amber-50: #fefaf0;
+
+      --green-600: #16803c;
+      --green-500: #22c55e;
+      --green-100: #dcfce7;
+
+      --red-600: #dc2626;
+      --red-100: #fee2e2;
+
+      --white: #ffffff;
+      --gray-50: #f8f9fb;
+      --gray-100: #f1f3f6;
+      --gray-200: #e2e6ec;
+      --gray-300: #cdd3dc;
+      --gray-400: #9ca3b0;
+      --gray-500: #6b7280;
+      --gray-600: #4b5563;
+      --gray-700: #374151;
+      --gray-800: #1f2937;
+      --gray-900: #111827;
+
+      --font-display: 'Outfit', sans-serif;
+      --font-body: 'DM Sans', sans-serif;
+
+      --shadow-sm: 0 1px 2px rgba(10, 15, 30, 0.05);
+      --shadow-md: 0 4px 12px rgba(10, 15, 30, 0.08);
+      --shadow-lg: 0 12px 40px rgba(10, 15, 30, 0.12);
+      --shadow-xl: 0 20px 60px rgba(10, 15, 30, 0.16);
+
+      --radius-sm: 6px;
+      --radius-md: 10px;
+      --radius-lg: 16px;
+      --radius-xl: 24px;
+
+      --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+      --transition-base: 250ms cubic-bezier(0.4, 0, 0.2, 1);
+      --transition-slow: 400ms cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    /* ═══════════════════════════════════════════
+       RESET & BASE
+       ═══════════════════════════════════════════ */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html {
+      scroll-behavior: smooth;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    body {
+      font-family: var(--font-body);
+      font-size: 15px;
+      line-height: 1.6;
+      color: var(--gray-800);
+      background: var(--white);
+      overflow-x: hidden;
+    }
+
+    /* ═══════════════════════════════════════════
+       LAYOUT
+       ═══════════════════════════════════════════ */
+    .container {
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 0 32px;
+    }
+
+    .container--narrow {
+      max-width: 880px;
+    }
+
+    /* ═══════════════════════════════════════════
+       HEADER
+       ═══════════════════════════════════════════ */
+    .site-header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--gray-100);
+      padding: 16px 0;
+    }
+
+    .site-header .container {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .logo-area {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .logo-area img {
+      height: 28px;
+      width: auto;
+    }
+
+    .logo-divider {
+      width: 1px;
+      height: 20px;
+      background: var(--gray-200);
+    }
+
+    .logo-area .tool-label {
+      font-family: var(--font-display);
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--gray-500);
+      letter-spacing: 0.02em;
+    }
+
+    .header-cta {
+      font-family: var(--font-display);
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--navy-700);
+      text-decoration: none;
+      padding: 8px 20px;
+      border: 1.5px solid var(--navy-200);
+      border-radius: 100px;
+      transition: all var(--transition-base);
+    }
+
+    .header-cta:hover {
+      background: var(--navy-900);
+      color: var(--white);
+      border-color: var(--navy-900);
+    }
+
+    /* ═══════════════════════════════════════════
+       HERO
+       ═══════════════════════════════════════════ */
+    .hero {
+      position: relative;
+      padding: 100px 0 80px;
+      background: var(--navy-950);
+      overflow: hidden;
+    }
+
+    .hero::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 60% 50% at 20% 50%, rgba(232, 160, 32, 0.08) 0%, transparent 70%),
+        radial-gradient(ellipse 50% 60% at 80% 30%, rgba(58, 82, 145, 0.15) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .hero::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+      pointer-events: none;
+    }
+
+    .hero .container {
+      position: relative;
+      z-index: 1;
+      text-align: center;
+    }
+
+    .hero__badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 16px;
+      background: rgba(232, 160, 32, 0.1);
+      border: 1px solid rgba(232, 160, 32, 0.2);
+      border-radius: 100px;
+      font-family: var(--font-display);
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--amber-400);
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      margin-bottom: 32px;
+      animation: fadeInUp 0.6s ease both;
+    }
+
+    .hero__badge::before {
+      content: '';
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--amber-400);
+    }
+
+    .hero__title {
+      font-family: var(--font-display);
+      font-size: clamp(32px, 5vw, 56px);
+      font-weight: 700;
+      line-height: 1.1;
+      color: var(--white);
+      max-width: 720px;
+      margin: 0 auto 24px;
+      animation: fadeInUp 0.6s ease 0.1s both;
+    }
+
+    .hero__title em {
+      font-style: normal;
+      background: linear-gradient(135deg, var(--amber-400), var(--amber-300));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .hero__subtitle {
+      font-size: 17px;
+      line-height: 1.7;
+      color: var(--navy-300);
+      max-width: 560px;
+      margin: 0 auto 48px;
+      animation: fadeInUp 0.6s ease 0.2s both;
+    }
+
+    .hero__scroll-hint {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-family: var(--font-display);
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--navy-400);
+      animation: fadeInUp 0.6s ease 0.3s both;
+    }
+
+    .hero__scroll-hint svg {
+      animation: bounceDown 2s ease infinite;
+    }
+
+    /* ═══════════════════════════════════════════
+       FORM SECTION
+       ═══════════════════════════════════════════ */
+    .form-section {
+      padding: 80px 0 60px;
+      background: var(--gray-50);
+      border-bottom: 1px solid var(--gray-100);
+    }
+
+    .form-header {
+      text-align: center;
+      margin-bottom: 56px;
+    }
+
+    .form-header__step {
+      font-family: var(--font-display);
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--amber-600);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-bottom: 12px;
+    }
+
+    .form-header h2 {
+      font-family: var(--font-display);
+      font-size: clamp(24px, 3vw, 36px);
+      font-weight: 700;
+      color: var(--navy-900);
+      margin-bottom: 12px;
+    }
+
+    .form-header p {
+      color: var(--gray-500);
+      font-size: 15px;
+      max-width: 480px;
+      margin: 0 auto;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 48px;
+    }
+
+    @media (max-width: 768px) {
+      .form-grid { grid-template-columns: 1fr; gap: 40px; }
+    }
+
+    .form-group-title {
+      font-family: var(--font-display);
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--navy-500);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      padding-bottom: 12px;
+      border-bottom: 2px solid var(--navy-100);
+      margin-bottom: 24px;
+    }
+
+    .field {
+      margin-bottom: 20px;
+    }
+
+    .field label {
+      display: block;
+      font-family: var(--font-display);
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--gray-700);
+      margin-bottom: 6px;
+    }
+
+    .field .hint {
+      font-size: 12px;
+      color: var(--gray-400);
+      margin-bottom: 6px;
+    }
+
+    .field input[type="number"],
+    .field input[type="text"],
+    .field input[type="email"],
+    .field select {
+      width: 100%;
+      padding: 10px 14px;
+      font-family: var(--font-body);
+      font-size: 14px;
+      color: var(--gray-800);
+      background: var(--white);
+      border: 1.5px solid var(--gray-200);
+      border-radius: var(--radius-sm);
+      transition: all var(--transition-fast);
+      outline: none;
+    }
+
+    .field input:focus,
+    .field select:focus {
+      border-color: var(--navy-500);
+      box-shadow: 0 0 0 3px rgba(58, 82, 145, 0.1);
+    }
+
+    .field input.error {
+      border-color: var(--red-600);
+      box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.08);
+    }
+
+    .field .error-msg {
+      font-size: 12px;
+      color: var(--red-600);
+      margin-top: 4px;
+      display: none;
+    }
+
+    .field input.error + .error-msg,
+    .field input.error ~ .error-msg {
+      display: block;
+    }
+
+    .input-with-unit {
+      position: relative;
+    }
+
+    .input-with-unit input {
+      padding-right: 60px;
+    }
+
+    .input-with-unit .unit-label {
+      position: absolute;
+      right: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-family: var(--font-display);
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--gray-400);
+      letter-spacing: 0.04em;
+      pointer-events: none;
+    }
+
+    /* Slider */
+    .slider-field {
+      margin-bottom: 20px;
+    }
+
+    .slider-field label {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-family: var(--font-display);
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--gray-700);
+      margin-bottom: 10px;
+    }
+
+    .slider-value {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--navy-700);
+      background: var(--navy-50);
+      padding: 2px 10px;
+      border-radius: 4px;
+    }
+
+    input[type="range"] {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 100%;
+      height: 6px;
+      border-radius: 3px;
+      background: var(--gray-200);
+      outline: none;
+      cursor: pointer;
+    }
+
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: var(--navy-700);
+      border: 3px solid var(--white);
+      box-shadow: 0 2px 8px rgba(10, 15, 30, 0.2);
+      cursor: pointer;
+      transition: transform var(--transition-fast);
+    }
+
+    input[type="range"]::-webkit-slider-thumb:hover {
+      transform: scale(1.15);
+    }
+
+    input[type="range"]::-moz-range-thumb {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: var(--navy-700);
+      border: 3px solid var(--white);
+      box-shadow: 0 2px 8px rgba(10, 15, 30, 0.2);
+      cursor: pointer;
+    }
+
+    /* Scenario Selector */
+    .scenario-section {
+      padding: 48px 0 0;
+    }
+
+    .scenario-presets {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+
+    .preset-btn {
+      font-family: var(--font-display);
+      font-size: 13px;
+      font-weight: 600;
+      padding: 10px 24px;
+      border: 1.5px solid var(--gray-200);
+      border-radius: 100px;
+      background: var(--white);
+      color: var(--gray-600);
+      cursor: pointer;
+      transition: all var(--transition-base);
+    }
+
+    .preset-btn:hover {
+      border-color: var(--navy-300);
+      color: var(--navy-700);
+    }
+
+    .preset-btn.active {
+      background: var(--navy-900);
+      border-color: var(--navy-900);
+      color: var(--white);
+    }
+
+    .preset-btn .preset-label {
+      display: block;
+      font-size: 10px;
+      font-weight: 500;
+      opacity: 0.7;
+      margin-top: 2px;
+    }
+
+    /* Contact Fields */
+    .contact-section {
+      margin-top: 48px;
+      padding-top: 40px;
+      border-top: 1px solid var(--gray-200);
+    }
+
+    .contact-section .form-group-title {
+      border-bottom-color: var(--amber-200);
+      color: var(--amber-600);
+    }
+
+    .contact-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    @media (max-width: 768px) {
+      .contact-grid { grid-template-columns: 1fr; }
+    }
+
+    .contact-note {
+      font-size: 12px;
+      color: var(--gray-400);
+      margin-top: 8px;
+      font-style: italic;
+    }
+
+    /* Submit Button */
+    .submit-area {
+      text-align: center;
+      padding: 48px 0 0;
+    }
+
+    .btn-calculate {
+      font-family: var(--font-display);
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--white);
+      background: linear-gradient(135deg, var(--navy-800), var(--navy-950));
+      border: none;
+      padding: 18px 56px;
+      border-radius: 100px;
+      cursor: pointer;
+      transition: all var(--transition-base);
+      box-shadow: 0 4px 20px rgba(10, 15, 30, 0.25);
+      letter-spacing: 0.02em;
+    }
+
+    .btn-calculate:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 32px rgba(10, 15, 30, 0.35);
+    }
+
+    .btn-calculate:active {
+      transform: translateY(0);
+    }
+
+    .btn-calculate .arrow {
+      display: inline-block;
+      margin-left: 8px;
+      transition: transform var(--transition-fast);
+    }
+
+    .btn-calculate:hover .arrow {
+      transform: translateX(4px);
+    }
+
+    /* ═══════════════════════════════════════════
+       RESULTS DASHBOARD
+       ═══════════════════════════════════════════ */
+    .results-section {
+      display: none;
+      padding: 80px 0 100px;
+      background: var(--white);
+    }
+
+    .results-section.visible {
+      display: block;
+      animation: fadeInUp 0.6s ease both;
+    }
+
+    .results-header {
+      text-align: center;
+      margin-bottom: 64px;
+    }
+
+    .results-header__tag {
+      font-family: var(--font-display);
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--green-600);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-bottom: 12px;
+    }
+
+    .results-header h2 {
+      font-family: var(--font-display);
+      font-size: clamp(24px, 3vw, 36px);
+      font-weight: 700;
+      color: var(--navy-900);
+    }
+
+    /* Hero Metric */
+    .hero-metric {
+      background: linear-gradient(135deg, var(--navy-950), var(--navy-800));
+      border-radius: var(--radius-xl);
+      padding: 56px 48px;
+      text-align: center;
+      margin-bottom: 48px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero-metric::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse 40% 60% at 80% 20%, rgba(232, 160, 32, 0.1) 0%, transparent 60%);
+      pointer-events: none;
+    }
+
+    .hero-metric__label {
+      font-family: var(--font-display);
+      font-size: 15px;
+      font-weight: 500;
+      color: var(--navy-300);
+      margin-bottom: 16px;
+      position: relative;
+    }
+
+    .hero-metric__value {
+      font-family: var(--font-display);
+      font-size: clamp(40px, 7vw, 72px);
+      font-weight: 800;
+      line-height: 1;
+      background: linear-gradient(135deg, var(--amber-300), var(--amber-500));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 12px;
+      position: relative;
+    }
+
+    .hero-metric__unit {
+      font-family: var(--font-display);
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--navy-400);
+      position: relative;
+    }
+
+    /* Stats Grid */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin-bottom: 48px;
+    }
+
+    @media (max-width: 768px) {
+      .stats-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+
+    .stat-card {
+      background: var(--gray-50);
+      border: 1px solid var(--gray-100);
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      text-align: center;
+      transition: all var(--transition-base);
+    }
+
+    .stat-card:hover {
+      border-color: var(--navy-200);
+      box-shadow: var(--shadow-md);
+    }
+
+    .stat-card__label {
+      font-family: var(--font-display);
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--gray-400);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+
+    .stat-card__value {
+      font-family: var(--font-display);
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--navy-900);
+      line-height: 1.2;
+    }
+
+    .stat-card__sub {
+      font-size: 12px;
+      color: var(--gray-400);
+      margin-top: 4px;
+    }
+
+    .stat-card--highlight {
+      background: linear-gradient(135deg, rgba(34, 197, 94, 0.05), rgba(34, 197, 94, 0.02));
+      border-color: rgba(34, 197, 94, 0.2);
+    }
+
+    .stat-card--highlight .stat-card__value {
+      color: var(--green-600);
+    }
+
+    /* Comparison Section */
+    .comparison {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      margin-bottom: 48px;
+    }
+
+    @media (max-width: 768px) {
+      .comparison { grid-template-columns: 1fr; }
+    }
+
+    .comparison__card {
+      border-radius: var(--radius-lg);
+      padding: 32px;
+      border: 1px solid var(--gray-100);
+    }
+
+    .comparison__card--current {
+      background: var(--gray-50);
+    }
+
+    .comparison__card--optimised {
+      background: linear-gradient(135deg, rgba(34, 197, 94, 0.04), rgba(34, 197, 94, 0.01));
+      border-color: rgba(34, 197, 94, 0.15);
+    }
+
+    .comparison__card-title {
+      font-family: var(--font-display);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-bottom: 20px;
+    }
+
+    .comparison__card--current .comparison__card-title { color: var(--gray-400); }
+    .comparison__card--optimised .comparison__card-title { color: var(--green-600); }
+
+    .comparison__row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--gray-100);
+    }
+
+    .comparison__row:last-child {
+      border-bottom: none;
+      padding-top: 14px;
+      margin-top: 4px;
+      border-top: 2px solid var(--gray-200);
+    }
+
+    .comparison__card--optimised .comparison__row:last-child {
+      border-top-color: rgba(34, 197, 94, 0.3);
+    }
+
+    .comparison__row-label {
+      font-size: 13px;
+      color: var(--gray-500);
+    }
+
+    .comparison__row-value {
+      font-family: var(--font-display);
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--gray-800);
+    }
+
+    .comparison__row:last-child .comparison__row-value {
+      font-size: 20px;
+    }
+
+    /* Charts */
+    .charts-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      margin-bottom: 48px;
+    }
+
+    @media (max-width: 768px) {
+      .charts-grid { grid-template-columns: 1fr; }
+    }
+
+    .chart-card {
+      background: var(--white);
+      border: 1px solid var(--gray-100);
+      border-radius: var(--radius-lg);
+      padding: 32px;
+    }
+
+    .chart-card__title {
+      font-family: var(--font-display);
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--navy-900);
+      margin-bottom: 24px;
+    }
+
+    .chart-card canvas {
+      max-height: 280px;
+    }
+
+    /* Sensitivity Table */
+    .sensitivity-section {
+      margin-bottom: 48px;
+    }
+
+    .section-title {
+      font-family: var(--font-display);
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--navy-900);
+      margin-bottom: 24px;
+    }
+
+    .sensitivity-table-wrapper {
+      overflow-x: auto;
+      border: 1px solid var(--gray-100);
+      border-radius: var(--radius-lg);
+    }
+
+    .sensitivity-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+
+    .sensitivity-table thead {
+      background: var(--navy-950);
+    }
+
+    .sensitivity-table th {
+      font-family: var(--font-display);
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--navy-200);
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      padding: 14px 16px;
+      text-align: right;
+      white-space: nowrap;
+    }
+
+    .sensitivity-table th:first-child {
+      text-align: left;
+      border-radius: var(--radius-lg) 0 0 0;
+    }
+
+    .sensitivity-table th:last-child {
+      border-radius: 0 var(--radius-lg) 0 0;
+    }
+
+    .sensitivity-table td {
+      padding: 12px 16px;
+      text-align: right;
+      border-bottom: 1px solid var(--gray-100);
+      color: var(--gray-700);
+    }
+
+    .sensitivity-table td:first-child {
+      text-align: left;
+      font-family: var(--font-display);
+      font-weight: 700;
+      color: var(--navy-700);
+    }
+
+    .sensitivity-table tbody tr:hover {
+      background: var(--navy-50);
+    }
+
+    .sensitivity-table tbody tr.active-row {
+      background: rgba(232, 160, 32, 0.06);
+    }
+
+    .sensitivity-table tbody tr.active-row td {
+      font-weight: 600;
+      color: var(--navy-900);
+    }
+
+    .sensitivity-table tbody tr.active-row td:first-child::after {
+      content: ' ◂';
+      color: var(--amber-500);
+      font-size: 10px;
+    }
+
+    /* Methodology */
+    .methodology {
+      margin-bottom: 48px;
+    }
+
+    .methodology-toggle {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-family: var(--font-display);
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--gray-500);
+      background: none;
+      border: 1px solid var(--gray-200);
+      padding: 10px 20px;
+      border-radius: 100px;
+      cursor: pointer;
+      transition: all var(--transition-base);
+    }
+
+    .methodology-toggle:hover {
+      border-color: var(--navy-300);
+      color: var(--navy-700);
+    }
+
+    .methodology-toggle .chevron {
+      transition: transform var(--transition-base);
+    }
+
+    .methodology-toggle.open .chevron {
+      transform: rotate(180deg);
+    }
+
+    .methodology-content {
+      display: none;
+      margin-top: 20px;
+      padding: 32px;
+      background: var(--gray-50);
+      border: 1px solid var(--gray-100);
+      border-radius: var(--radius-lg);
+      font-size: 13px;
+      color: var(--gray-600);
+      line-height: 1.8;
+    }
+
+    .methodology-content.open {
+      display: block;
+      animation: fadeInUp 0.3s ease both;
+    }
+
+    .methodology-content h4 {
+      font-family: var(--font-display);
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--navy-700);
+      margin: 16px 0 6px;
+    }
+
+    .methodology-content h4:first-child {
+      margin-top: 0;
+    }
+
+    /* CTA */
+    .cta-section {
+      background: linear-gradient(135deg, var(--navy-950), var(--navy-800));
+      border-radius: var(--radius-xl);
+      padding: 64px 48px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .cta-section::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse 50% 70% at 30% 70%, rgba(232, 160, 32, 0.08) 0%, transparent 60%);
+      pointer-events: none;
+    }
+
+    .cta-section h3 {
+      font-family: var(--font-display);
+      font-size: clamp(22px, 3vw, 32px);
+      font-weight: 700;
+      color: var(--white);
+      margin-bottom: 12px;
+      position: relative;
+    }
+
+    .cta-section p {
+      color: var(--navy-300);
+      font-size: 15px;
+      max-width: 480px;
+      margin: 0 auto 32px;
+      position: relative;
+    }
+
+    .btn-cta {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-family: var(--font-display);
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--navy-950);
+      background: linear-gradient(135deg, var(--amber-400), var(--amber-300));
+      border: none;
+      padding: 16px 40px;
+      border-radius: 100px;
+      text-decoration: none;
+      cursor: pointer;
+      transition: all var(--transition-base);
+      box-shadow: 0 4px 20px rgba(232, 160, 32, 0.3);
+      position: relative;
+    }
+
+    .btn-cta:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 32px rgba(232, 160, 32, 0.4);
+    }
+
+    /* Footer */
+    .site-footer {
+      padding: 40px 0;
+      text-align: center;
+    }
+
+    .site-footer p {
+      font-size: 12px;
+      color: var(--gray-400);
+      max-width: 600px;
+      margin: 0 auto;
+      line-height: 1.7;
+    }
+
+    .site-footer .footer-brand {
+      font-family: var(--font-display);
+      font-weight: 600;
+      color: var(--gray-500);
+      margin-bottom: 8px;
+    }
+
+    /* ═══════════════════════════════════════════
+       ANIMATIONS
+       ═══════════════════════════════════════════ */
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes bounceDown {
+      0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+      40% { transform: translateY(6px); }
+      60% { transform: translateY(3px); }
+    }
+
+    @keyframes countUp {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ═══════════════════════════════════════════
+       CURRENCY SELECTOR
+       ═══════════════════════════════════════════ */
+    .currency-selector {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 28px;
+    }
+
+    .currency-btn {
+      font-family: var(--font-display);
+      font-size: 12px;
+      font-weight: 600;
+      padding: 6px 14px;
+      border: 1.5px solid var(--gray-200);
+      border-radius: 100px;
+      background: var(--white);
+      color: var(--gray-500);
+      cursor: pointer;
+      transition: all var(--transition-fast);
+    }
+
+    .currency-btn.active {
+      background: var(--navy-900);
+      border-color: var(--navy-900);
+      color: var(--white);
+    }
+
+    /* ═══════════════════════════════════════════
+       UTILITY
+       ═══════════════════════════════════════════ */
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+  </style>
+</head>
+
+<body>
+  <!-- ═══ HEADER ═══ -->
+  <header class="site-header">
+    <div class="container">
+      <div class="logo-area">
+        <img src="https://counselect.com/wp-content/uploads/2024/03/counselect.svg" alt="Counselect" onerror="this.outerHTML='<span style=\'font-family:Outfit,sans-serif;font-size:20px;font-weight:700;color:#0f1729\'>counselect</span>'">
+        <div class="logo-divider"></div>
+        <span class="tool-label">Cost Calculator</span>
+      </div>
+      <a href="https://counselect.com/lets-talk/" target="_blank" rel="noopener" class="header-cta">Talk to Us</a>
+    </div>
+  </header>
+
+  <!-- ═══ HERO ═══ -->
+  <section class="hero">
+    <div class="container">
+      <div class="hero__badge">Diagnostic Tool</div>
+      <h1 class="hero__title">What is the real cost of <em>legal delays</em> in your contract lifecycle?</h1>
+      <p class="hero__subtitle">Most legal departments know reviews take too long. Few know what it actually costs. Enter your data below to find out — and see how much you could save.</p>
+      <div class="hero__scroll-hint">
+        <span>Scroll to begin</span>
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 3v10m0 0l-3.5-3.5M8 13l3.5-3.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ FORM ═══ -->
+  <section class="form-section" id="calculator">
+    <div class="container container--narrow">
+      <div class="form-header">
+        <div class="form-header__step">Step 1 of 2</div>
+        <h2>Enter your contract data</h2>
+        <p>All fields have sensible defaults. Adjust the ones relevant to your organisation.</p>
+      </div>
+
+      <form id="calcForm" novalidate>
+        <!-- Currency -->
+        <div style="text-align:center;">
+          <div class="currency-selector" style="justify-content:center;">
+            <button type="button" class="currency-btn active" data-currency="INR" data-symbol="₹">₹ INR</button>
+            <button type="button" class="currency-btn" data-currency="USD" data-symbol="$">$ USD</button>
+            <button type="button" class="currency-btn" data-currency="GBP" data-symbol="£">£ GBP</button>
+            <button type="button" class="currency-btn" data-currency="EUR" data-symbol="€">€ EUR</button>
+          </div>
+        </div>
+
+        <div class="form-grid">
+          <!-- SECTION A: Deal Profile -->
+          <div class="form-col">
+            <div class="form-group-title">Your Deal Profile</div>
+
+            <div class="field">
+              <label for="dealsPerYear">Number of deals per year</label>
+              <div class="input-with-unit">
+                <input type="number" id="dealsPerYear" value="200" min="1" max="10000" step="1">
+                <span class="unit-label">deals</span>
+              </div>
+            </div>
+
+            <div class="field">
+              <label for="avgDealValue">Average deal value</label>
+              <div class="input-with-unit">
+                <input type="number" id="avgDealValue" value="5000000" min="1000" step="10000">
+                <span class="unit-label currency-unit">INR</span>
+              </div>
+            </div>
+
+            <div class="field">
+              <label for="totalCycleTime">Average total deal cycle time</label>
+              <div class="input-with-unit">
+                <input type="number" id="totalCycleTime" value="45" min="1" max="365" step="1">
+                <span class="unit-label">days</span>
+              </div>
+            </div>
+
+            <div class="field">
+              <label for="legalReviewTime">Average legal review time</label>
+              <div class="hint">Within the total deal cycle</div>
+              <div class="input-with-unit">
+                <input type="number" id="legalReviewTime" value="21" min="1" max="365" step="1">
+                <span class="unit-label">days</span>
+              </div>
+              <div class="error-msg" id="legalTimeError">Must be ≤ total deal cycle time</div>
+            </div>
+
+            <div class="field">
+              <label for="legalHours">Average legal hours per deal</label>
+              <div class="input-with-unit">
+                <input type="number" id="legalHours" value="12" min="0.5" max="200" step="0.5">
+                <span class="unit-label">hours</span>
+              </div>
+            </div>
+
+            <div class="field">
+              <label for="touchpoints">Average touchpoints per deal</label>
+              <div class="hint">Times the contract is picked up / put down</div>
+              <div class="input-with-unit">
+                <input type="number" id="touchpoints" value="5" min="1" max="50" step="1">
+                <span class="unit-label">count</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- SECTION B: Cost Drivers -->
+          <div class="form-col">
+            <div class="form-group-title">Cost Drivers</div>
+
+            <div class="field">
+              <label for="legalRate">Internal legal hourly rate</label>
+              <div class="input-with-unit">
+                <input type="number" id="legalRate" value="6000" min="100" step="100">
+                <span class="unit-label currency-unit">INR/hr</span>
+              </div>
+            </div>
+
+            <div class="slider-field">
+              <label>
+                Context-switching multiplier
+                <span class="slider-value" id="csMultiplierValue">1.25×</span>
+              </label>
+              <input type="range" id="csMultiplier" min="1" max="2" step="0.05" value="1.25">
+              <div class="hint">Overhead from stop-start work on the same contract</div>
+            </div>
+
+            <div class="field">
+              <label for="outsideCounsel">Outside counsel cost per deal</label>
+              <div class="input-with-unit">
+                <input type="number" id="outsideCounsel" value="45000" min="0" step="1000">
+                <span class="unit-label currency-unit">INR</span>
+              </div>
+            </div>
+
+            <div class="slider-field">
+              <label>
+                Outside counsel % affected by cycle time
+                <span class="slider-value" id="ocPctValue">40%</span>
+              </label>
+              <input type="range" id="ocPct" min="0" max="100" step="5" value="40">
+            </div>
+
+            <div class="field">
+              <label for="bdRate">BD / Sales team hourly rate</label>
+              <div class="input-with-unit">
+                <input type="number" id="bdRate" value="4000" min="0" step="100">
+                <span class="unit-label currency-unit">INR/hr</span>
+              </div>
+            </div>
+
+            <div class="field">
+              <label for="bdHours">BD hours spent per deal in legal limbo</label>
+              <div class="input-with-unit">
+                <input type="number" id="bdHours" value="3" min="0" max="100" step="0.5">
+                <span class="unit-label">hours</span>
+              </div>
+            </div>
+
+            <div class="slider-field">
+              <label>
+                Cost of capital (annualised)
+                <span class="slider-value" id="cocValue">12%</span>
+              </label>
+              <input type="range" id="coc" min="0" max="30" step="0.5" value="12">
+            </div>
+          </div>
+        </div>
+
+        <!-- Scenario -->
+        <div class="scenario-section">
+          <div class="form-group-title" style="border-bottom-color: var(--amber-200); color: var(--amber-600);">Scenario: Legal Review Time Reduction</div>
+          <div class="scenario-presets">
+            <button type="button" class="preset-btn" data-pct="20">20%<span class="preset-label">Conservative</span></button>
+            <button type="button" class="preset-btn active" data-pct="40">40%<span class="preset-label">Moderate</span></button>
+            <button type="button" class="preset-btn" data-pct="60">60%<span class="preset-label">Aggressive</span></button>
+          </div>
+          <div class="slider-field">
+            <label>
+              Custom reduction
+              <span class="slider-value" id="reductionValue">40%</span>
+            </label>
+            <input type="range" id="reductionSlider" min="0" max="80" step="5" value="40">
+          </div>
+        </div>
+
+        <!-- Contact (Optional) -->
+        <div class="contact-section">
+          <div class="form-group-title">Optional: Get your results emailed</div>
+          <div class="contact-grid">
+            <div class="field">
+              <label for="userName">Your name</label>
+              <input type="text" id="userName" placeholder="Jane Doe">
+            </div>
+            <div class="field">
+              <label for="userEmail">Email</label>
+              <input type="email" id="userEmail" placeholder="jane@company.com">
+            </div>
+            <div class="field">
+              <label for="userCompany">Company</label>
+              <input type="text" id="userCompany" placeholder="Acme Corp">
+            </div>
+            <div class="field">
+              <label for="userDesignation">Designation</label>
+              <input type="text" id="userDesignation" placeholder="General Counsel">
+            </div>
+          </div>
+          <p class="contact-note">These fields are optional. Your results will appear instantly below regardless.</p>
+        </div>
+
+        <!-- Submit -->
+        <div class="submit-area">
+          <button type="submit" class="btn-calculate">
+            Calculate Impact <span class="arrow">→</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </section>
+
+  <!-- ═══ RESULTS ═══ -->
+  <section class="results-section" id="results">
+    <div class="container container--narrow">
+      <div class="results-header">
+        <div class="results-header__tag">Your Results</div>
+        <h2>Contract Lifecycle Cost Analysis</h2>
+      </div>
+
+      <!-- Hero Metric -->
+      <div class="hero-metric">
+        <div class="hero-metric__label">Every day a contract sits in legal review costs your organisation</div>
+        <div class="hero-metric__value" id="costPerDayHero">—</div>
+        <div class="hero-metric__unit">per day of legal delay</div>
+      </div>
+
+      <!-- Stats Grid -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-card__label">Legal Leverage Ratio</div>
+          <div class="stat-card__value" id="statLLR">—</div>
+          <div class="stat-card__sub">of deal cycle is legal-dependent</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card__label">Annual Legal Cost</div>
+          <div class="stat-card__value" id="statAnnualCost">—</div>
+          <div class="stat-card__sub">current total</div>
+        </div>
+        <div class="stat-card stat-card--highlight">
+          <div class="stat-card__label">Annual Savings</div>
+          <div class="stat-card__value" id="statAnnualSavings">—</div>
+          <div class="stat-card__sub" id="statSavingsPct">—</div>
+        </div>
+        <div class="stat-card stat-card--highlight">
+          <div class="stat-card__label">Days Saved / Deal</div>
+          <div class="stat-card__value" id="statDaysSaved">—</div>
+          <div class="stat-card__sub">per contract</div>
+        </div>
+      </div>
+
+      <!-- Comparison -->
+      <div class="comparison">
+        <div class="comparison__card comparison__card--current">
+          <div class="comparison__card-title">Current State</div>
+          <div class="comparison__row"><span class="comparison__row-label">Direct Legal Cost</span><span class="comparison__row-value" id="curDirect">—</span></div>
+          <div class="comparison__row"><span class="comparison__row-label">Outside Counsel</span><span class="comparison__row-value" id="curOC">—</span></div>
+          <div class="comparison__row"><span class="comparison__row-label">Sales Carrying Cost</span><span class="comparison__row-value" id="curSales">—</span></div>
+          <div class="comparison__row"><span class="comparison__row-label">Working Capital Cost</span><span class="comparison__row-value" id="curWC">—</span></div>
+          <div class="comparison__row"><span class="comparison__row-label">Total per Deal</span><span class="comparison__row-value" id="curTotal">—</span></div>
+        </div>
+        <div class="comparison__card comparison__card--optimised">
+          <div class="comparison__card-title">Optimised State</div>
+          <div class="comparison__row"><span class="comparison__row-label">Direct Legal Cost</span><span class="comparison__row-value" id="optDirect">—</span></div>
+          <div class="comparison__row"><span class="comparison__row-label">Outside Counsel</span><span class="comparison__row-value" id="optOC">—</span></div>
+          <div class="comparison__row"><span class="comparison__row-label">Sales Carrying Cost</span><span class="comparison__row-value" id="optSales">—</span></div>
+          <div class="comparison__row"><span class="comparison__row-label">Working Capital Cost</span><span class="comparison__row-value" id="optWC">—</span></div>
+          <div class="comparison__row"><span class="comparison__row-label">Total per Deal</span><span class="comparison__row-value" id="optTotal">—</span></div>
+        </div>
+      </div>
+
+      <!-- Charts -->
+      <div class="charts-grid">
+        <div class="chart-card">
+          <div class="chart-card__title">Cost Breakdown — Current vs Optimised</div>
+          <canvas id="breakdownChart"></canvas>
+        </div>
+        <div class="chart-card">
+          <div class="chart-card__title">Savings by Component</div>
+          <canvas id="savingsChart"></canvas>
+        </div>
+      </div>
+
+      <!-- Sensitivity Table -->
+      <div class="sensitivity-section">
+        <div class="section-title">Sensitivity Analysis</div>
+        <div class="sensitivity-table-wrapper">
+          <table class="sensitivity-table">
+            <thead>
+              <tr>
+                <th>Reduction</th>
+                <th>Days Saved</th>
+                <th>New Cycle</th>
+                <th>Annual Cost</th>
+                <th>Annual Savings</th>
+                <th>Savings %</th>
+                <th>Cost / Day</th>
+              </tr>
+            </thead>
+            <tbody id="sensitivityBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Methodology -->
+      <div class="methodology">
+        <button type="button" class="methodology-toggle" id="methToggle">
+          How we calculate this
+          <svg class="chevron" width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3.5 5.25L7 8.75l3.5-3.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <div class="methodology-content" id="methContent">
+          <h4>Four Cost Components</h4>
+          Direct Legal Cost captures internal lawyer time, amplified by a context-switching multiplier that accounts for the productivity loss from stop-start work across multiple contracts. Outside Counsel Cost represents external legal spend, with only the portion affected by cycle time (e.g., scope creep from prolonged negotiations) factored into the reduction. Sales Carrying Cost quantifies the opportunity cost of BD/sales team time spent in limbo during legal review. Working Capital Cost measures the financing cost of capital tied up in pending deals.
+
+          <h4>Legal Leverage Ratio</h4>
+          This ratio (legal review time ÷ total cycle time) shows what percentage of the deal lifecycle is legal-dependent. It prevents overclaiming — if legal touches 40% of the cycle, a 50% legal improvement yields ~20% overall improvement, not 50%.
+
+          <h4>Reduction Assumptions</h4>
+          Touchpoints reduce at 60% of the rate of time reduction (fewer handoffs, but not eliminated). The context-switching multiplier reduces proportionally but with dampening. BD carrying cost reduces at 50% of the legal reduction rate (sales time improves but not linearly with legal speed). Revenue Acceleration Value uses a 40% gross margin assumption.
+
+          <h4>What This Does Not Account For</h4>
+          Win rate decay (deals dying due to delays), competitive displacement, employee morale, and second-order effects on client relationships. The actual impact is likely higher than the figures shown.
+        </div>
+      </div>
+
+      <!-- CTA -->
+      <div class="cta-section">
+        <h3>Ready to turn these numbers into reality?</h3>
+        <p>Counselect helps legal departments reduce cycle times, cut costs, and unlock strategic value. Let's talk about what's possible for your team.</p>
+        <a href="https://counselect.com/lets-talk/" target="_blank" rel="noopener" class="btn-cta">
+          Talk to Counselect
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8h10m0 0L9.5 4.5M13 8l-3.5 3.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ FOOTER ═══ -->
+  <footer class="site-footer">
+    <div class="container">
+      <p class="footer-brand">Counselect — Managed solutions for legal departments</p>
+      <p>This calculator provides indicative estimates based on the inputs provided. Actual results may vary depending on organisational context, contract complexity, and implementation approach. Counselect does not guarantee specific outcomes. For a detailed assessment, contact our team.</p>
+    </div>
+  </footer>
+
+  <!-- ═══ JAVASCRIPT ═══ -->
+  <script>
+    /* ═══════════════════════════════════════════
+       STATE
+       ═══════════════════════════════════════════ */
+    let selectedCurrency = { code: 'INR', symbol: '₹' };
+    let breakdownChart = null;
+    let savingsChart = null;
+
+    /* ═══════════════════════════════════════════
+       HELPERS
+       ═══════════════════════════════════════════ */
+    function fmt(n, decimals = 0) {
+      if (Math.abs(n) >= 1e7) {
+        return selectedCurrency.symbol + (n / 1e7).toFixed(2) + ' Cr';
+      } else if (Math.abs(n) >= 1e5) {
+        return selectedCurrency.symbol + (n / 1e5).toFixed(2) + ' L';
+      } else {
+        return selectedCurrency.symbol + n.toLocaleString('en-IN', { maximumFractionDigits: decimals });
+      }
+    }
+
+    function fmtShort(n) {
+      if (Math.abs(n) >= 1e7) return selectedCurrency.symbol + (n / 1e7).toFixed(1) + 'Cr';
+      if (Math.abs(n) >= 1e5) return selectedCurrency.symbol + (n / 1e5).toFixed(1) + 'L';
+      return selectedCurrency.symbol + Math.round(n).toLocaleString('en-IN');
+    }
+
+    function val(id) { return parseFloat(document.getElementById(id).value) || 0; }
+
+    /* ═══════════════════════════════════════════
+       UI: Currency Selector
+       ═══════════════════════════════════════════ */
+    document.querySelectorAll('.currency-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.currency-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        selectedCurrency = { code: btn.dataset.currency, symbol: btn.dataset.symbol };
+        document.querySelectorAll('.currency-unit').forEach(el => {
+          el.textContent = el.textContent.replace(/^(INR|USD|GBP|EUR)/, selectedCurrency.code);
+        });
+      });
+    });
+
+    /* ═══════════════════════════════════════════
+       UI: Sliders
+       ═══════════════════════════════════════════ */
+    document.getElementById('csMultiplier').addEventListener('input', e => {
+      document.getElementById('csMultiplierValue').textContent = parseFloat(e.target.value).toFixed(2) + '×';
+    });
+
+    document.getElementById('ocPct').addEventListener('input', e => {
+      document.getElementById('ocPctValue').textContent = e.target.value + '%';
+    });
+
+    document.getElementById('coc').addEventListener('input', e => {
+      document.getElementById('cocValue').textContent = e.target.value + '%';
+    });
+
+    /* Scenario slider + presets */
+    const reductionSlider = document.getElementById('reductionSlider');
+    const reductionValue = document.getElementById('reductionValue');
+    const presetBtns = document.querySelectorAll('.preset-btn[data-pct]');
+
+    reductionSlider.addEventListener('input', e => {
+      const v = parseInt(e.target.value);
+      reductionValue.textContent = v + '%';
+      presetBtns.forEach(b => {
+        b.classList.toggle('active', parseInt(b.dataset.pct) === v);
+      });
+    });
+
+    presetBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const v = parseInt(btn.dataset.pct);
+        reductionSlider.value = v;
+        reductionValue.textContent = v + '%';
+        presetBtns.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+      });
+    });
+
+    /* Methodology toggle */
+    document.getElementById('methToggle').addEventListener('click', function() {
+      this.classList.toggle('open');
+      document.getElementById('methContent').classList.toggle('open');
+    });
+
+    /* ═══════════════════════════════════════════
+       CALCULATION ENGINE
+       ═══════════════════════════════════════════ */
+    function calculate(reductionPct) {
+      const R = reductionPct / 100;
+
+      // Inputs
+      const deals = val('dealsPerYear');
+      const dealValue = val('avgDealValue');
+      const totalCycle = val('totalCycleTime');
+      const legalTime = val('legalReviewTime');
+      const legalHrs = val('legalHours');
+      const touchpts = val('touchpoints');
+      const legalRate = val('legalRate');
+      const csMult = parseFloat(document.getElementById('csMultiplier').value);
+      const ocCost = val('outsideCounsel');
+      const ocPct = parseFloat(document.getElementById('ocPct').value) / 100;
+      const bdRate = val('bdRate');
+      const bdHrs = val('bdHours');
+      const coc = parseFloat(document.getElementById('coc').value) / 100;
+
+      // Legal Leverage Ratio
+      const llr = legalTime / totalCycle;
+
+      // Current State
+      const curDirect = legalHrs * legalRate * csMult;
+      const curOC = ocCost;
+      const curSales = bdRate * bdHrs;
+      const curWC = (dealValue * coc * legalTime) / 365;
+      const curTotal = curDirect + curOC + curSales + curWC;
+      const curAnnual = curTotal * deals;
+
+      // Reduced State
+      const newLegalTime = legalTime * (1 - R);
+      const newLegalHrs = legalHrs * (1 - R);
+      const newTouchpts = touchpts * (1 - R * 0.6);
+      const newCsMult = 1 + (csMult - 1) * (1 - R * 0.4);
+      const newDirect = newLegalHrs * legalRate * newCsMult;
+      const newOC = ocCost * (1 - R * ocPct);
+      const newSales = bdRate * bdHrs * (1 - R * 0.5);
+      const newWC = (dealValue * coc * newLegalTime) / 365;
+      const newTotal = newDirect + newOC + newSales + newWC;
+      const newAnnual = newTotal * deals;
+
+      // Impact
+      const annualSavings = curAnnual - newAnnual;
+      const savingsPerDeal = curTotal - newTotal;
+      const savingsPct = curAnnual > 0 ? (annualSavings / curAnnual) * 100 : 0;
+      const daysSaved = legalTime * R;
+      const costPerDay = (curAnnual / (legalTime * deals));
+      const newCycleTime = totalCycle - daysSaved;
+      const rav = (dealValue * 0.4 * daysSaved / 365) * deals;
+
+      return {
+        llr, deals, dealValue, totalCycle, legalTime, R,
+        cur: { direct: curDirect, oc: curOC, sales: curSales, wc: curWC, total: curTotal, annual: curAnnual },
+        opt: { direct: newDirect, oc: newOC, sales: newSales, wc: newWC, total: newTotal, annual: newAnnual },
+        annualSavings, savingsPerDeal, savingsPct, daysSaved, costPerDay, newCycleTime, rav, newTouchpts,
+        savingsBreakdown: {
+          direct: curDirect - newDirect,
+          oc: curOC - newOC,
+          sales: curSales - newSales,
+          wc: curWC - newWC
+        }
+      };
+    }
+
+    /* ═══════════════════════════════════════════
+       RENDER RESULTS
+       ═══════════════════════════════════════════ */
+    function renderResults(data) {
+      const sec = document.getElementById('results');
+      sec.classList.add('visible');
+
+      // Hero metric
+      document.getElementById('costPerDayHero').textContent = fmt(data.costPerDay);
+
+      // Stats grid
+      document.getElementById('statLLR').textContent = (data.llr * 100).toFixed(0) + '%';
+      document.getElementById('statAnnualCost').textContent = fmtShort(data.cur.annual);
+      document.getElementById('statAnnualSavings').textContent = fmtShort(data.annualSavings);
+      document.getElementById('statSavingsPct').textContent = data.savingsPct.toFixed(1) + '% reduction';
+      document.getElementById('statDaysSaved').textContent = data.daysSaved.toFixed(1);
+
+      // Comparison
+      document.getElementById('curDirect').textContent = fmt(data.cur.direct);
+      document.getElementById('curOC').textContent = fmt(data.cur.oc);
+      document.getElementById('curSales').textContent = fmt(data.cur.sales);
+      document.getElementById('curWC').textContent = fmt(data.cur.wc);
+      document.getElementById('curTotal').textContent = fmt(data.cur.total);
+
+      document.getElementById('optDirect').textContent = fmt(data.opt.direct);
+      document.getElementById('optOC').textContent = fmt(data.opt.oc);
+      document.getElementById('optSales').textContent = fmt(data.opt.sales);
+      document.getElementById('optWC').textContent = fmt(data.opt.wc);
+      document.getElementById('optTotal').textContent = fmt(data.opt.total);
+
+      // Charts
+      renderBreakdownChart(data);
+      renderSavingsChart(data);
+
+      // Sensitivity table
+      renderSensitivityTable(data);
+
+      // Scroll to results
+      setTimeout(() => {
+        sec.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 100);
+    }
+
+    function renderBreakdownChart(data) {
+      const ctx = document.getElementById('breakdownChart').getContext('2d');
+      if (breakdownChart) breakdownChart.destroy();
+
+      const labels = ['Direct Legal', 'Outside Counsel', 'Sales Carrying', 'Working Capital'];
+
+      breakdownChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: labels,
+          datasets: [
+            {
+              label: 'Current',
+              data: [data.cur.direct, data.cur.oc, data.cur.sales, data.cur.wc],
+              backgroundColor: 'rgba(30, 45, 86, 0.75)',
+              borderRadius: 4,
+              barPercentage: 0.7,
+            },
+            {
+              label: 'Optimised',
+              data: [data.opt.direct, data.opt.oc, data.opt.sales, data.opt.wc],
+              backgroundColor: 'rgba(34, 197, 94, 0.65)',
+              borderRadius: 4,
+              barPercentage: 0.7,
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: true,
+          plugins: {
+            legend: { position: 'bottom', labels: { font: { family: 'Outfit', size: 11 }, padding: 16, usePointStyle: true, pointStyle: 'rectRounded' } },
+            tooltip: {
+              callbacks: { label: ctx => ctx.dataset.label + ': ' + fmt(ctx.parsed.y) }
+            }
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+              ticks: { callback: v => fmtShort(v), font: { family: 'DM Sans', size: 11 } },
+              grid: { color: 'rgba(0,0,0,0.04)' }
+            },
+            x: {
+              ticks: { font: { family: 'Outfit', size: 11 } },
+              grid: { display: false }
+            }
+          }
+        }
+      });
+    }
+
+    function renderSavingsChart(data) {
+      const ctx = document.getElementById('savingsChart').getContext('2d');
+      if (savingsChart) savingsChart.destroy();
+
+      const sb = data.savingsBreakdown;
+      const total = sb.direct + sb.oc + sb.sales + sb.wc;
+
+      savingsChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+          labels: ['Direct Legal', 'Outside Counsel', 'Sales Carrying', 'Working Capital'],
+          datasets: [{
+            data: [sb.direct, sb.oc, sb.sales, sb.wc],
+            backgroundColor: [
+              'rgba(30, 45, 86, 0.8)',
+              'rgba(58, 82, 145, 0.7)',
+              'rgba(128, 150, 204, 0.7)',
+              'rgba(232, 160, 32, 0.7)'
+            ],
+            borderWidth: 2,
+            borderColor: '#fff',
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: true,
+          cutout: '62%',
+          plugins: {
+            legend: { position: 'bottom', labels: { font: { family: 'Outfit', size: 11 }, padding: 12, usePointStyle: true, pointStyle: 'rectRounded' } },
+            tooltip: {
+              callbacks: {
+                label: ctx => {
+                  const pct = total > 0 ? ((ctx.parsed / total) * 100).toFixed(1) : 0;
+                  return ctx.label + ': ' + fmt(ctx.parsed) + ' (' + pct + '%)';
+                }
+              }
+            }
+          }
+        }
+      });
+    }
+
+    function renderSensitivityTable(data) {
+      const tbody = document.getElementById('sensitivityBody');
+      tbody.innerHTML = '';
+      const scenarios = [10, 20, 30, 40, 50, 60];
+      const activeR = Math.round(data.R * 100);
+
+      scenarios.forEach(pct => {
+        const d = calculate(pct);
+        const tr = document.createElement('tr');
+        if (pct === activeR) tr.classList.add('active-row');
+        tr.innerHTML = `
+          <td>${pct}%</td>
+          <td>${d.daysSaved.toFixed(1)} days</td>
+          <td>${d.newCycleTime.toFixed(1)} days</td>
+          <td>${fmtShort(d.opt.annual)}</td>
+          <td>${fmtShort(d.annualSavings)}</td>
+          <td>${d.savingsPct.toFixed(1)}%</td>
+          <td>${fmt(d.costPerDay)}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    /* ═══════════════════════════════════════════
+       FORM VALIDATION & SUBMISSION
+       ═══════════════════════════════════════════ */
+    document.getElementById('calcForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+
+      // Validate legal review time <= total cycle time
+      const legalTime = val('legalReviewTime');
+      const totalCycle = val('totalCycleTime');
+      const legalInput = document.getElementById('legalReviewTime');
+
+      if (legalTime > totalCycle) {
+        legalInput.classList.add('error');
+        document.getElementById('legalTimeError').style.display = 'block';
+        legalInput.focus();
+        return;
+      } else {
+        legalInput.classList.remove('error');
+        document.getElementById('legalTimeError').style.display = 'none';
+      }
+
+      // Calculate
+      const reductionPct = parseInt(reductionSlider.value);
+      const data = calculate(reductionPct);
+      renderResults(data);
+
+      // Async Formspree submission (fire & forget)
+      const formData = {
+        name: document.getElementById('userName').value,
+        email: document.getElementById('userEmail').value,
+        company: document.getElementById('userCompany').value,
+        designation: document.getElementById('userDesignation').value,
+        currency: selectedCurrency.code,
+        deals_per_year: val('dealsPerYear'),
+        avg_deal_value: val('avgDealValue'),
+        total_cycle_time: val('totalCycleTime'),
+        legal_review_time: val('legalReviewTime'),
+        legal_hours: val('legalHours'),
+        touchpoints: val('touchpoints'),
+        legal_rate: val('legalRate'),
+        cs_multiplier: parseFloat(document.getElementById('csMultiplier').value),
+        outside_counsel: val('outsideCounsel'),
+        oc_pct_affected: parseFloat(document.getElementById('ocPct').value),
+        bd_rate: val('bdRate'),
+        bd_hours: val('bdHours'),
+        cost_of_capital: parseFloat(document.getElementById('coc').value),
+        reduction_pct: reductionPct,
+        // Computed outputs
+        annual_savings: Math.round(data.annualSavings),
+        savings_pct: data.savingsPct.toFixed(1) + '%',
+        cost_per_day: Math.round(data.costPerDay),
+        days_saved: data.daysSaved.toFixed(1),
+      };
+
+      // Replace YOUR_FORM_ID with your actual Formspree form ID
+      fetch('https://formspree.io/f/maqpjvkz', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+        body: JSON.stringify(formData)
+      }).catch(() => { /* silent fail — results still shown */ });
+    });
+  </script>
+</body>
+</html>
